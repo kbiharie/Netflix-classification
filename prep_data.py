@@ -2,6 +2,8 @@ import cv2
 import math
 import glob
 import os
+import random
+import json
 
 
 def process_episode(episode_path, show_name, dataset_folder, next_image, timeframe=120):
@@ -25,7 +27,7 @@ def process_episode(episode_path, show_name, dataset_folder, next_image, timefra
 
 
 def process_show(show_path, dataset_folder):
-    show_name = (show_path.split("\\")[-1])
+    show_name = show_path.split("\\")[-1]
     next_image = 0
     os.mkdir(dataset_folder + show_name)
     for path in glob.glob(show_path + "\\**"):
@@ -38,5 +40,34 @@ def create_images(shows_folder, dataset_folder):
         process_show(path, dataset_folder)
 
 
+def create_json(dataset_folder, n_train=80, n_val=10, n_test=10):
+
+    image_paths = {}
+    for folder in glob.glob(dataset_folder + "**"):
+        show_name = folder.split("\\")[-1]
+        image_paths[show_name] = []
+        for image_path in glob.glob(folder + "\\*.jpg"):
+            image_paths[show_name].append(image_path.replace("\\", "/"))
+        print(show_name)
+
+    dataset = {"train": [], "val": [], "test": []}
+    for show_name in image_paths:
+        random.shuffle(image_paths[show_name])
+        for i in range(n_train + n_val + n_test):
+            entry = {"show": show_name, "path": image_paths[show_name][i]}
+            if i < n_train:
+                dataset["train"].append(entry)
+            elif i < n_train + n_val:
+                dataset["val"].append(entry)
+            else:
+                dataset["test"].append(entry)
+
+    with open(dataset_folder + "filenames.json", "w") as w:
+        json.dump(dataset, w)
+
+
 if __name__ == '__main__':
-    create_images("..\\shows\\", "..\\dataset\\")
+    show_folder = "../shows/"
+    dataset_folder = "../dataset/"
+    # create_images(show_folder, dataset_folder)
+    create_json(dataset_folder)
