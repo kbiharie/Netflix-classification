@@ -42,25 +42,32 @@ def create_images(shows_folder, dataset_folder):
 
 def create_json(dataset_folder, n_train=80, n_val=10, n_test=10):
 
+    show_dir = {}
+
     image_paths = {}
     for folder in glob.glob(dataset_folder + "**"):
+        if not os.path.isdir(folder):
+            continue
         show_name = folder.split("\\")[-1]
         image_paths[show_name] = []
         for image_path in glob.glob(folder + "\\*.jpg"):
             image_paths[show_name].append(image_path.replace("\\", "/"))
         print(show_name)
+        show_dir[show_name] = len(show_dir)
 
     dataset = {"train": [], "val": [], "test": []}
     for show_name in image_paths:
         random.shuffle(image_paths[show_name])
         for i in range(n_train + n_val + n_test):
-            entry = {"show": show_name, "path": image_paths[show_name][i]}
+            entry = {"show": show_name, "path": image_paths[show_name][i], "label": show_dir[show_name]}
             if i < n_train:
                 dataset["train"].append(entry)
             elif i < n_train + n_val:
                 dataset["val"].append(entry)
             else:
                 dataset["test"].append(entry)
+
+    dataset["show_dir"] = show_dir
 
     with open(dataset_folder + "filenames.json", "w") as w:
         json.dump(dataset, w)
