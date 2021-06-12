@@ -24,12 +24,12 @@ if __name__ == "__main__":
     #     cv2.imshow("Image", img)
     #     cv2.waitKey(0)
 
-    model = torchvision.models.resnet18(pretrained=True)
+    model = torchvision.models.resnet50(pretrained=True)
     model.fc = torch.nn.Linear(in_features=model.fc.in_features, out_features=n_classes, bias=True)
     model.cuda()
 
     # Training loop
-    epochs = 5
+    epochs = 20
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 
@@ -41,6 +41,9 @@ if __name__ == "__main__":
     for epoch in range(epochs):
         print("Epoch", epoch)
         model.train()
+        if epoch == 10:
+            for g in optimizer.param_groups:
+                g['lr'] = 0.00001
         correct = 0
         total = 0
         total_loss = 0
@@ -94,26 +97,26 @@ if __name__ == "__main__":
         val_accuracy.append(accuracy)
         val_loss.append(total_loss)
 
-    with open("statistics18.dat", "wb") as f:
+    with open("statistics35s.dat", "wb") as f:
         for stat in [train_accuracy, train_loss, val_accuracy, val_loss]:
             print(stat)
             np.save(f, stat)
 
-    # 0/0
-    #
-    # model.eval()
-    # test_dataset = NetflixDataset("../dataset/filenames.json", "test")
-    # test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=32,
-    #                                          shuffle=True, num_workers=0)
-    #
-    # with torch.no_grad():
-    #     for i, (imgs, targets) in enumerate(test_dataloader):
-    #         imgs = imgs.cuda()
-    #         targets = targets.cuda()
-    #         outputs = model(imgs)
-    #         _, preds = torch.max(outputs, 1)
-    #
-    #         targets = targets.cpu().numpy()
-    #         preds = preds.cpu().numpy()
-    #         print("total", len(targets))
-    #         print("correct", np.sum([targets[j] == preds[j] for j in range(len(targets))]))
+    torch.save(model.state_dict(), "model35s.pth")
+
+    model.eval()
+    test_dataset = NetflixDataset("../dataset/filenames.json", "test")
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=32,
+                                             shuffle=True, num_workers=0)
+
+    with torch.no_grad():
+        for i, (imgs, targets) in enumerate(test_dataloader):
+            imgs = imgs.cuda()
+            targets = targets.cuda()
+            outputs = model(imgs)
+            _, preds = torch.max(outputs, 1)
+
+            targets = targets.cpu().numpy()
+            preds = preds.cpu().numpy()
+            print("total", len(targets))
+            print("correct", np.sum([targets[j] == preds[j] for j in range(len(targets))]))
