@@ -101,7 +101,7 @@ def create_json(dataset_folder, n_train=400, n_val=50, n_test=50):
     dataset["show_dir"] = show_dir
 
     # Save to a json file
-    with open(dataset_folder + "filenames.json", "w") as w:
+    with open(dataset_folder + "filenames_animated.json", "w") as w:
         json.dump(dataset, w)
 
 

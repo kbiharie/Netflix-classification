@@ -56,17 +56,22 @@ def show_random_images(train_dataset):
 
     # Show images
     for id in ids:
-        img = train_dataset.__getitem__(id)
+        img, label = train_dataset.__getitem__(id)
+        img = img.cpu().permute(1, 2, 0)
+        img = img.numpy()
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         cv2.imshow("Image", img)
         cv2.waitKey(0)
 
 
-
 if __name__ == "__main__":
 
+    json_file = "../dataset/filenames_animated.json"
+    model_name = "model_animated_10"
+
     # Train and validation datasets
-    train_dataset = NetflixDataset("../dataset/filenames.json", "train")
-    val_dataset = NetflixDataset("../dataset/filenames.json", "val")
+    train_dataset = NetflixDataset(json_file, "train")
+    val_dataset = NetflixDataset(json_file, "val")
     # Number of classes in the dataset
     n_classes = train_dataset.n_classes
     # Train and validation dataloaders
@@ -86,8 +91,8 @@ if __name__ == "__main__":
     model.cuda()
 
     # Training loop
-    # Amount fo epochs to train
-    epochs = 20
+    # Amount of epochs to train
+    epochs = 10
     # Loss function
     loss_fn = torch.nn.CrossEntropyLoss()
     # Optimizer
@@ -107,11 +112,10 @@ if __name__ == "__main__":
         # Put the model in train mode
         model.train()
 
-        # Lower the learning rate if it is the tenth epoch
-        if epoch == 10:
+        # Lower the learning rate every 10 epochs
+        if (epoch + 1) % 10 == 0:
             for g in optimizer.param_groups:
-                g['lr'] = 0.00001
-
+                g['lr'] /= 10
         # Variables necessary to calculate the accuracy
         correct = 0
         total_loss = 0
@@ -160,18 +164,18 @@ if __name__ == "__main__":
         val_loss.append(total_loss / len(val_dataloader))
 
     # Save the training and validation accuracies and losses to a file
-    with open("statistics35s.dat", "wb") as f:
+    with open("models/" + model_name + ".dat", "wb") as f:
         for stat in [train_accuracy, train_loss, val_accuracy, val_loss]:
             print(stat)
             np.save(f, stat)
 
     # Save the trained model
-    torch.save(model.state_dict(), "model35s.pth")
+    torch.save(model.state_dict(), "models/" + model_name + ".pth")
 
     # Put the model in validation mode
     model.eval()
     # Test dataset
-    test_dataset = NetflixDataset("../dataset/filenames.json", "test")
+    test_dataset = NetflixDataset(json_file, "test")
     # Test dataloader
     test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=32,
                                              shuffle=True, num_workers=0)

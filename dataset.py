@@ -18,13 +18,14 @@ class NetflixDataset(torch.utils.data.Dataset):
             all_data = json.load(f)
             self.data = all_data[self.purpose]
             self.n_classes = len(all_data["show_dir"])
+            self.shows = all_data["show_dir"]
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, id):
         # Transforms used on every image
-        tfs = transforms.Compose([transforms.RandomCrop(240), transforms.ToTensor(), transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        tfs = transforms.Compose([transforms.RandomResizedCrop(240), transforms.ToTensor(), transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
         image_path = self.data[id]["path"]
         if not os.path.exists(image_path):
