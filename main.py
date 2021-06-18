@@ -67,7 +67,7 @@ def show_random_images(train_dataset):
 if __name__ == "__main__":
 
     json_file = "../dataset/filenames_animated.json"
-    model_name = "model_animated_10"
+    model_name = "model_animated_30"
 
     # Train and validation datasets
     train_dataset = NetflixDataset(json_file, "train")
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     # Training loop
     # Amount of epochs to train
-    epochs = 10
+    epochs = 30
     # Loss function
     loss_fn = torch.nn.CrossEntropyLoss()
     # Optimizer
